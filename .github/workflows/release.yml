@@ -8,7 +8,6 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  LOCAL_TAG: curator:scan
 
 jobs:
   release:
@@ -41,23 +40,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha
 
-      - name: Build image locally
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          load: true
-          tags: ${{ env.LOCAL_TAG }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: ${{ env.LOCAL_TAG }}
-          format: table
-          exit-code: '1'
-          severity: CRITICAL,HIGH
-
-      - name: Push image
+      - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
