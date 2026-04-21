@@ -28,6 +28,8 @@ from curator._version import __version__
 @click.option(
     '--ignore_empty_list',
     is_flag=True,
+    default=True,
+    show_default=True,
     help='Do not raise exception if there are no actionable indices',
 )
 @click.option(
@@ -185,6 +187,8 @@ def show_indices(
 @click.option(
     '--ignore_empty_list',
     is_flag=True,
+    default=True,
+    show_default=True,
     help='Do not raise exception if there are no actionable snapshots',
 )
 @click.option(

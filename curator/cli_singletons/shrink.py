@@ -95,6 +95,8 @@ from curator.cli_singletons.utils import json_to_dict, validate_filter_json
 @click.option(
     '--ignore_empty_list',
     is_flag=True,
+    default=True,
+    show_default=True,
     help='Do not raise exception if there are no actionable indices',
 )
 @click.option(

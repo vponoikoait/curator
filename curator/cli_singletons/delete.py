@@ -17,6 +17,8 @@ from curator.cli_singletons.utils import validate_filter_json
 @click.option(
     '--ignore_empty_list',
     is_flag=True,
+    default=True,
+    show_default=True,
     help='Do not raise exception if there are no actionable indices',
 )
 @click.option(
@@ -97,6 +99,8 @@ def delete_indices(
 @click.option(
     '--ignore_empty_list',
     is_flag=True,
+    default=True,
+    show_default=True,
     help='Do not raise exception if there are no actionable snapshots',
 )
 @click.option(

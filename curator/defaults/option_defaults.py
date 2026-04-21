@@ -157,11 +157,11 @@ def extra_settings():
 def ignore_empty_list():
     """
     :returns:
-        {Optional('ignore_empty_list', default=False):
+        {Optional('ignore_empty_list', default=True):
             Any(bool, All(Any(str), Boolean()))}
     """
     return {
-        Optional('ignore_empty_list', default=False): Any(  # type: ignore
+        Optional('ignore_empty_list', default=True): Any(  # type: ignore
             bool, All(Any(str), Boolean())  # type: ignore
         )
     }

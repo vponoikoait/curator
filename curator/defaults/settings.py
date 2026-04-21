@@ -200,14 +200,14 @@ def default_options():
     """
     :returns: The default values for these options:
         {'allow_ilm_indices': False, 'continue_if_exception': False,
-        'disable_action': False, 'ignore_empty_list': False,
+        'disable_action': False, 'ignore_empty_list': True,
         'include_hidden': False, 'timeout_override': None}
     """
     return {
         'allow_ilm_indices': False,
         'continue_if_exception': False,
         'disable_action': False,
-        'ignore_empty_list': False,
+        'ignore_empty_list': True,
         'include_hidden': False,
         'timeout_override': None,
     }
