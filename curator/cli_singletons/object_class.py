@@ -215,10 +215,16 @@ class CLIAction:
         except (NoIndices, NoSnapshots) as exc:
             otype = 'index' if isinstance(exc, NoIndices) else 'snapshot'
             if self.ignore:
-                logger.info('Singleton action not performed: empty %s list', otype)
+                logger.info(
+                    'Action "%s" - nothing to do: no %ses matched the provided filters.',
+                    self.action, otype,
+                )
                 sys.exit(0)
             else:
-                logger.error('Singleton action failed due to empty %s list', otype)
+                logger.error(
+                    'Action "%s" failed: no %ses matched the provided filters.',
+                    self.action, otype,
+                )
                 sys.exit(1)
 
     def get_list_object(self) -> t.Union[IndexList, SnapshotList]:
@@ -269,6 +275,11 @@ class CLIAction:
             else:
                 self.get_list_object()
                 self.do_filters()
+                matched = self.list_object.indices
+                logger.info(
+                    'Action "%s" will act on %s matching index(es): %s',
+                    self.action, len(matched), matched,
+                )
                 debug.lv5('OPTIONS = %s', self.options)
                 action_obj = self.action_class(self.list_object, **self.options)
             if dry_run:
@@ -279,7 +290,10 @@ class CLIAction:
             if not self.ignore:
                 logger.critical('No indices in list after filtering. Exiting.')
                 sys.exit(1)
-            logger.info('No indices in list after filtering. Skipping action.')
+            logger.info(
+                'Action "%s" - nothing to do: no indices matched after filtering.',
+                self.action,
+            )
         except Exception as exc:
             logger.critical(
                 'Failed to complete action: %s. Exception: %s', self.action, exc
