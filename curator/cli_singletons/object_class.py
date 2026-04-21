@@ -4,11 +4,13 @@
 import typing as t
 import logging
 import sys
+from datetime import datetime, timezone
 from voluptuous import Schema
 from es_client.builder import Builder
 from es_client.exceptions import FailedValidation
 from es_client.helpers.schemacheck import SchemaCheck
 from es_client.helpers.utils import prune_nones
+import click
 from curator import IndexList, SnapshotList
 from curator.debug import debug
 from curator.actions import (
@@ -36,6 +38,16 @@ from curator.validators import options
 from curator.validators.filter_functions import validfilters
 
 logger = logging.getLogger(__name__)
+
+
+def log_message(level, msg):
+    """Write a log message to stderr via click.echo, bypassing Python logging.
+
+    This ensures curator action messages are always visible regardless of how
+    es_client configures the logging framework.
+    """
+    timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S,%f')[:-3]
+    click.echo(f'{timestamp} {level:>8s} curator {msg}', err=True)
 
 CLASS_MAP = {
     'alias': Alias,
@@ -215,15 +227,17 @@ class CLIAction:
         except (NoIndices, NoSnapshots) as exc:
             otype = 'index' if isinstance(exc, NoIndices) else 'snapshot'
             if self.ignore:
-                logger.info(
-                    'Action "%s" - nothing to do: no %ses matched the provided filters.',
-                    self.action, otype,
+                log_message(
+                    'INFO',
+                    f'Action "{self.action}" - nothing to do: '
+                    f'no {otype}es matched the provided filters.',
                 )
                 sys.exit(0)
             else:
-                logger.error(
-                    'Action "%s" failed: no %ses matched the provided filters.',
-                    self.action, otype,
+                log_message(
+                    'ERROR',
+                    f'Action "{self.action}" failed: '
+                    f'no {otype}es matched the provided filters.',
                 )
                 sys.exit(1)
 
@@ -276,9 +290,10 @@ class CLIAction:
                 self.get_list_object()
                 self.do_filters()
                 matched = self.list_object.indices
-                logger.info(
-                    'Action "%s" will act on %s matching index(es): %s',
-                    self.action, len(matched), matched,
+                log_message(
+                    'INFO',
+                    f'Action "{self.action}" will act on '
+                    f'{len(matched)} matching index(es): {matched}',
                 )
                 debug.lv5('OPTIONS = %s', self.options)
                 action_obj = self.action_class(self.list_object, **self.options)
@@ -288,16 +303,18 @@ class CLIAction:
                 action_obj.do_action()
         except NoIndices:  # Speficically to address #1704
             if not self.ignore:
-                logger.critical('No indices in list after filtering. Exiting.')
+                log_message('CRITICAL', 'No indices in list after filtering. Exiting.')
                 sys.exit(1)
-            logger.info(
-                'Action "%s" - nothing to do: no indices matched after filtering.',
-                self.action,
+            log_message(
+                'INFO',
+                f'Action "{self.action}" - nothing to do: '
+                f'no indices matched after filtering.',
             )
         except Exception as exc:
-            logger.critical(
-                'Failed to complete action: %s. Exception: %s', self.action, exc
+            log_message(
+                'CRITICAL',
+                f'Failed to complete action: {self.action}. Exception: {exc}',
             )
             sys.exit(1)
-        logger.info('"%s" action completed.', self.action)
+        log_message('INFO', f'"{self.action}" action completed.')
         sys.exit(0)

@@ -1,6 +1,5 @@
 """CLI module for curator_cli"""
 
-import logging
 import click
 from es_client.defaults import SHOW_EVERYTHING
 from es_client.helpers.config import (
@@ -94,22 +93,6 @@ def curator_cli(
     ctx.obj['default_config'] = default_config_file()
     get_config(ctx)
     configure_logging(ctx)
-    # es_client's configure_logging may misconfigure or skip the 'curator' logger.
-    # Force our own handler so curator log messages always appear.
-    curator_logger = logging.getLogger('curator')
-    log_level = getattr(logging, (loglevel or 'INFO').upper(), logging.INFO)
-    curator_logger.setLevel(log_level)
-    curator_logger.propagate = True
-    # Remove any existing handlers that might be swallowing output
-    curator_logger.handlers = []
-    handler = logging.StreamHandler()
-    handler.setLevel(log_level)
-    handler.setFormatter(
-        logging.Formatter(
-            '%(asctime)s %(levelname)-7s %(name)s %(message)s'
-        )
-    )
-    curator_logger.addHandler(handler)
     debug.level = debug_level
     generate_configdict(ctx)
 
