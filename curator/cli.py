@@ -318,19 +318,21 @@ def cli(
     ctx.obj['default_config'] = default_config_file()
     get_config(ctx)
     configure_logging(ctx)
-    # es_client's configure_logging only sets up its own loggers.
-    # Set up the 'curator' logger explicitly so our messages are visible.
+    # es_client's configure_logging may misconfigure or skip the 'curator' logger.
+    # Force our own handler so curator log messages always appear.
     curator_logger = logging.getLogger('curator')
-    if not curator_logger.handlers:
-        log_level = getattr(logging, (loglevel or 'INFO').upper(), logging.INFO)
-        handler = logging.StreamHandler()
-        handler.setFormatter(
-            logging.Formatter(
-                '%(asctime)s %(levelname)-7s %(name)s %(message)s'
-            )
+    log_level = getattr(logging, (loglevel or 'INFO').upper(), logging.INFO)
+    curator_logger.setLevel(log_level)
+    curator_logger.propagate = True
+    curator_logger.handlers = []
+    handler = logging.StreamHandler()
+    handler.setLevel(log_level)
+    handler.setFormatter(
+        logging.Formatter(
+            '%(asctime)s %(levelname)-7s %(name)s %(message)s'
         )
-        curator_logger.setLevel(log_level)
-        curator_logger.addHandler(handler)
+    )
+    curator_logger.addHandler(handler)
     debug.level = debug_level
     generate_configdict(ctx)
     run(ctx)
