@@ -226,7 +226,10 @@ class CLIAction:
             sys.exit(1)
 
     def do_filters(self):
-        """Actually run the filters"""
+        """Actually run the filters.
+
+        Returns True if there are actionable items, False if the list is empty.
+        """
         debug.lv3('Running filters and testing for empty list object')
         if not self.allow_ilm and not self.action in [
             'delete_snapshots',
@@ -237,6 +240,7 @@ class CLIAction:
         try:
             self.list_object.iterate_filters({'filters': self.filters})
             self.list_object.empty_list_check()
+            return True
         except (NoIndices, NoSnapshots) as exc:
             otype = 'index' if isinstance(exc, NoIndices) else 'snapshot'
             if self.ignore:
@@ -245,7 +249,7 @@ class CLIAction:
                     f'Action "{self.action}" - nothing to do: '
                     f'no {otype}es matched the provided filters.',
                 )
-                sys.exit(0)
+                return False
             else:
                 log_message(
                     'ERROR',
@@ -295,6 +299,7 @@ class CLIAction:
         """Execute the (ostensibly) completely ready to run action"""
         log_message('INFO', f'Starting action "{self.action}"...')
         debug.lv3('Doing the singleton "%s" action here.', self.action)
+        exit_code = 0
         try:
             if self.action == 'alias':
                 action_obj = self.get_alias_obj()
@@ -302,7 +307,10 @@ class CLIAction:
                 action_obj = self.action_class(self.client, **self.options)
             else:
                 self.get_list_object()
-                self.do_filters()
+                has_items = self.do_filters()
+                if not has_items:
+                    # Message already logged by do_filters
+                    sys.exit(0)
                 matched = self.list_object.indices
                 log_message(
                     'INFO',
@@ -331,4 +339,4 @@ class CLIAction:
             )
             sys.exit(1)
         log_message('INFO', f'"{self.action}" action completed.')
-        sys.exit(0)
+        sys.exit(exit_code)
