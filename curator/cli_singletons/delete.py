@@ -1,6 +1,7 @@
 """Delete Index and Delete Snapshot Singletons"""
 
 # pylint: disable=R0913,R0917
+import sys
 import click
 from curator.cli_singletons.object_class import CLIAction
 from curator.cli_singletons.utils import validate_filter_json
@@ -72,23 +73,31 @@ def delete_indices(
     """
     Delete Indices
     """
+    print('CURATOR: delete_indices starting', file=sys.stderr, flush=True)
     # ctx.info_name is the name of the function or name specified in @click.command
     # decorator
-    action = CLIAction(
-        'delete_indices',
-        ctx.obj['configdict'],
-        {
-            'search_pattern': search_pattern,
-            'allow_ilm_indices': allow_ilm_indices,
-            'include_datastreams': include_datastreams,
-            'include_hidden': include_hidden,
-            'include_kibana': include_kibana,
-            'include_system': include_system,
-        },
-        filter_list,
-        ignore_empty_list,
-    )
-    action.do_singleton_action(dry_run=ctx.obj['dry_run'])
+    try:
+        action = CLIAction(
+            'delete_indices',
+            ctx.obj['configdict'],
+            {
+                'search_pattern': search_pattern,
+                'allow_ilm_indices': allow_ilm_indices,
+                'include_datastreams': include_datastreams,
+                'include_hidden': include_hidden,
+                'include_kibana': include_kibana,
+                'include_system': include_system,
+            },
+            filter_list,
+            ignore_empty_list,
+        )
+        print('CURATOR: CLIAction created, calling do_singleton_action', file=sys.stderr, flush=True)
+        action.do_singleton_action(dry_run=ctx.obj['dry_run'])
+    except SystemExit:
+        raise
+    except Exception as exc:
+        print(f'CURATOR: EXCEPTION during delete_indices: {exc}', file=sys.stderr, flush=True)
+        raise
 
 
 # Snapshots
