@@ -10,7 +10,6 @@ from es_client.builder import Builder
 from es_client.exceptions import FailedValidation
 from es_client.helpers.schemacheck import SchemaCheck
 from es_client.helpers.utils import prune_nones
-import click
 from curator import IndexList, SnapshotList
 from curator.debug import debug
 from curator.actions import (
@@ -116,7 +115,6 @@ class CLIAction:
         """
         self.filters = []
         self.action = action
-        log_message('INFO', f'Initializing action "{action}"...')
         self.repository = kwargs['repository'] if 'repository' in kwargs else None
         if action[:5] != 'show_':  # Ignore CLASS_MAP for show_indices/show_snapshots
             try:
@@ -306,10 +304,11 @@ class CLIAction:
             elif self.action in ['cluster_routing', 'create_index', 'rollover']:
                 action_obj = self.action_class(self.client, **self.options)
             else:
-                self.get_list_object()
+                self.list_object = self.get_list_object()
                 has_items = self.do_filters()
                 if not has_items:
                     # Message already logged by do_filters
+                    log_message('INFO', f'"{self.action}" action completed.')
                     sys.exit(0)
                 matched = self.list_object.indices
                 log_message(
