@@ -41,13 +41,25 @@ logger = logging.getLogger(__name__)
 
 
 def log_message(level, msg):
-    """Write a log message to stderr via click.echo, bypassing Python logging.
+    """Write a log message directly to stderr and optionally to the logfile.
 
-    This ensures curator action messages are always visible regardless of how
-    es_client configures the logging framework.
+    Bypasses Python logging entirely to ensure visibility.
     """
+    import os
     timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S,%f')[:-3]
-    click.echo(f'{timestamp} {level:>8s} curator {msg}', err=True)
+    formatted = f'{timestamp} {level:>8s} curator {msg}'
+    # Write to stderr using raw file descriptor to bypass any buffering/redirection
+    sys.stderr.write(formatted + '\n')
+    sys.stderr.flush()
+    # Also append to the logfile if ESCLIENT_LOGFILE is set
+    logfile = os.environ.get('ESCLIENT_LOGFILE')
+    if logfile:
+        try:
+            with open(logfile, 'a') as fh:
+                fh.write(formatted + '\n')
+                fh.flush()
+        except OSError:
+            pass
 
 CLASS_MAP = {
     'alias': Alias,
@@ -104,6 +116,7 @@ class CLIAction:
         """
         self.filters = []
         self.action = action
+        log_message('INFO', f'Initializing action "{action}"...')
         self.repository = kwargs['repository'] if 'repository' in kwargs else None
         if action[:5] != 'show_':  # Ignore CLASS_MAP for show_indices/show_snapshots
             try:
@@ -280,6 +293,7 @@ class CLIAction:
 
     def do_singleton_action(self, dry_run=False):
         """Execute the (ostensibly) completely ready to run action"""
+        log_message('INFO', f'Starting action "{self.action}"...')
         debug.lv3('Doing the singleton "%s" action here.', self.action)
         try:
             if self.action == 'alias':
