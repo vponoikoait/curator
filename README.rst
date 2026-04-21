@@ -24,6 +24,35 @@ Additional support for Elasticsearch 7.14.0 - 7.17.x
 Starting with Curator 8.0.18, Curator 8 can execute against Elasticsearch versions
 7.14.0 - 7.17.x in addition to all versions of Elasticsearch 8.x.
 
+Improved Action Logging (8.0.26)
+********************************
+
+Starting with Curator 8.0.26, singleton CLI actions (``curator_cli``) now produce clear,
+human-readable log messages written directly to stderr. This ensures visibility regardless
+of how ``es_client`` configures the Python logging framework.
+
+Example output when no indices match::
+
+    INFO curator Action "delete_indices" - nothing to do: no indices matched the provided filters.
+    INFO curator "delete_indices" action completed.
+
+Example output when indices are deleted::
+
+    INFO curator Starting action "delete_indices"...
+    INFO curator Action "delete_indices" will act on 3 matching index(es): ['filebeat-2026.04.17', ...]
+    INFO curator "delete_indices" action completed.
+
+Errors during connection or execution are also reported to stderr::
+
+    ERROR curator delete_indices failed: Failed to get indices. Error: Connection timed out
+
+Docker Base Image Change (8.0.26)
+*********************************
+
+Starting with Curator 8.0.26, the Docker image is based on ``debian:bookworm-slim`` instead
+of Alpine Linux. This resolves TLS/SSL compatibility issues with the ``cx_Freeze`` frozen
+binary and OpenSSL libraries.
+
 New Client Configuration
 ------------------------
 

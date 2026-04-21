@@ -1,9 +1,8 @@
 """Delete Index and Delete Snapshot Singletons"""
 
 # pylint: disable=R0913,R0917
-import sys
 import click
-from curator.cli_singletons.object_class import CLIAction
+from curator.cli_singletons.object_class import CLIAction, log_message
 from curator.cli_singletons.utils import validate_filter_json
 
 
@@ -73,7 +72,6 @@ def delete_indices(
     """
     Delete Indices
     """
-    print('CURATOR: delete_indices starting', file=sys.stderr, flush=True)
     # ctx.info_name is the name of the function or name specified in @click.command
     # decorator
     try:
@@ -91,12 +89,11 @@ def delete_indices(
             filter_list,
             ignore_empty_list,
         )
-        print('CURATOR: CLIAction created, calling do_singleton_action', file=sys.stderr, flush=True)
         action.do_singleton_action(dry_run=ctx.obj['dry_run'])
     except SystemExit:
         raise
     except Exception as exc:
-        print(f'CURATOR: EXCEPTION during delete_indices: {exc}', file=sys.stderr, flush=True)
+        log_message('ERROR', f'delete_indices failed: {exc}')
         raise
 
 
